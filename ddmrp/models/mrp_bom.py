@@ -94,9 +94,9 @@ class MrpBom(models.Model):
     dlt = fields.Float(string="Decoupled Lead Time (days)",
                        compute="_compute_dlt")
 
-    has_mto_rule = fields.Float(string="MTO",
-                                help="Follows an MTO Pull Rule",
-                                compute="_compute_mto_rule")
+    has_mto_rule = fields.Boolean(string="MTO",
+                                  help="Follows an MTO Pull Rule",
+                                  compute="_compute_mto_rule")
 
 
 class MrpBomLine(models.Model):
@@ -156,6 +156,6 @@ class MrpBomLine(models.Model):
     dlt = fields.Float(string="Decoupled Lead Time (days)",
                        compute="_compute_dlt")
 
-    has_mto_rule = fields.Float(string="MTO",
-                                help="Follows an MTO Pull Rule",
-                                compute="_compute_mto_rule")
+    has_mto_rule = fields.Boolean(string="MTO",
+                                  help="Follows an MTO Pull Rule",
+                                  compute="_compute_mto_rule")
