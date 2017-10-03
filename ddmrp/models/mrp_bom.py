@@ -128,23 +128,12 @@ class MrpBomLine(models.Model):
                           rec.product_id.seller_ids[0].delay or 0.0
 
     def _compute_mto_rule(self):
-        rule_model = self.env['procurement.rule']
         for rec in self:
             if rec.product_id.bom_ids:
                 rec.has_mto_rule = True if (
                     rec.location_id in
                     rec.product_id.mrp_mts_mto_location_ids) else False
-            else:
-                domain = [('location_id.parent_left', '<=',
-                           rec.location_id.parent_left),
-                          ('location_id.parent_right', '>=',
-                           rec.location_id.parent_left),
-                          ('route_id', 'in', rec.product_id.route_ids.ids),
-                          ('procure_method', '=', 'make_to_order')]
-                rules = rule_model.search(
-                    domain, order='route_sequence, sequence', limit=1)
-                rec.has_mto_rule = True if rules else False
-
+            
     is_buffered = fields.Boolean(
         string="Buffered?", compute="_compute_is_buffered",
         help="True when the product has an DDMRP buffer associated.")
