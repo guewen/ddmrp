@@ -89,7 +89,7 @@ class MrpBom(models.Model):
 
     orderpoint_id = fields.Many2one(
         comodel_name='stock.warehouse.orderpoint', string='Orderpoint',
-        compute="_compute_buffered")
+        compute="_compute_is_buffered")
 
     dlt = fields.Float(string="Decoupled Lead Time (days)",
                        compute="_compute_dlt")
@@ -151,7 +151,7 @@ class MrpBomLine(models.Model):
 
     orderpoint_id = fields.Many2one(
         comodel_name='stock.warehouse.orderpoint', string='Orderpoint',
-        compute="_compute_buffered")
+        compute="_compute_is_buffered")
 
     dlt = fields.Float(string="Decoupled Lead Time (days)",
                        compute="_compute_dlt")
