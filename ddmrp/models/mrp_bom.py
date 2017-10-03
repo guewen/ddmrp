@@ -19,20 +19,27 @@ class MrpBom(models.Model):
             domain.append(('location_id', '=', self.location_id.id))
         return domain
 
-    def _compute_buffered(self):
+    def _compute_is_buffered(self):
         for bom in self:
             domain = bom._get_search_buffer_domain()
             orderpoint = self.env['stock.warehouse.orderpoint'].search(
                 domain, limit=1)
             bom.orderpoint_id = orderpoint
-            bom.buffered = True if orderpoint else False
+            bom.is_buffered = True if orderpoint else False
+
+    def _compute_mto_rule(self):
+        for rec in self:
+            template = rec.product_id.product_tmpl_id or rec.product_tmpl_id
+            rec.has_mto_rule = True if (
+                rec.location_id in
+                template.mrp_mts_mto_location_ids) else False
 
     @api.multi
     def _get_longest_path(self):
         paths = [0] * len(self.bom_line_ids)
         i = 0
         for line in self.bom_line_ids:
-            if line.buffered:
+            if line.is_buffered:
                 i += 1
             elif line.product_id.bom_ids:
                 # If the a component is manufactured we continue exploding.
@@ -76,8 +83,8 @@ class MrpBom(models.Model):
         for rec in self:
             rec.dlt = rec._get_manufactured_dlt()
 
-    buffered = fields.Boolean(
-        string="Buffered?", compute="_compute_buffered",
+    is_buffered = fields.Boolean(
+        string="Buffered?", compute="_compute_is_buffered",
         help="True when the product has an DDMRP buffer associated.")
 
     orderpoint_id = fields.Many2one(
@@ -86,6 +93,10 @@ class MrpBom(models.Model):
 
     dlt = fields.Float(string="Decoupled Lead Time (days)",
                        compute="_compute_dlt")
+
+    has_mto_rule = fields.Float(string="MTO",
+                                help="Follows an MTO Pull Rule",
+                                compute="_compute_mto_rule")
 
 
 class MrpBomLine(models.Model):
@@ -100,13 +111,13 @@ class MrpBomLine(models.Model):
             domain.append(('location_id', '=', self.location_id.id))
         return domain
 
-    def _compute_buffered(self):
+    def _compute_is_buffered(self):
         for line in self:
             domain = line._get_search_buffer_domain()
             orderpoint = self.env['stock.warehouse.orderpoint'].search(
                 domain, limit=1)
             line.orderpoint_id = orderpoint
-            line.buffered = True if orderpoint else False
+            line.is_buffered = True if orderpoint else False
 
     def _compute_dlt(self):
         for rec in self:
@@ -116,8 +127,26 @@ class MrpBomLine(models.Model):
                 rec.dlt = rec.product_id.seller_ids and \
                           rec.product_id.seller_ids[0].delay or 0.0
 
-    buffered = fields.Boolean(
-        string="Buffered?", compute="_compute_buffered",
+    def _compute_mto_rule(self):
+        rule_model = self.env['procurement.rule']
+        for rec in self:
+            if rec.product_id.bom_ids:
+                rec.has_mto_rule = True if (
+                    rec.location_id in
+                    rec.product_id.mrp_mts_mto_location_ids) else False
+            else:
+                domain = [('location_id.parent_left', '<=',
+                           rec.location_id.parent_left),
+                          ('location_id.parent_right', '>=',
+                           rec.location_id.parent_left),
+                          ('route_id', 'in', rec.route_ids.ids),
+                          ('procure_method', '=', 'make_to_order')]
+                rules = rule_model.search(
+                    domain, order='route_sequence, sequence', limit=1)
+                rec.has_mto_rule = True if rules else False
+
+    is_buffered = fields.Boolean(
+        string="Buffered?", compute="_compute_is_buffered",
         help="True when the product has an DDMRP buffer associated.")
 
     orderpoint_id = fields.Many2one(
@@ -126,3 +155,7 @@ class MrpBomLine(models.Model):
 
     dlt = fields.Float(string="Decoupled Lead Time (days)",
                        compute="_compute_dlt")
+
+    has_mto_rule = fields.Float(string="MTO",
+                                help="Follows an MTO Pull Rule",
+                                compute="_compute_mto_rule")
