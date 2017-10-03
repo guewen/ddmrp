@@ -139,7 +139,7 @@ class MrpBomLine(models.Model):
                            rec.location_id.parent_left),
                           ('location_id.parent_right', '>=',
                            rec.location_id.parent_left),
-                          ('route_id', 'in', rec.route_ids.ids),
+                          ('route_id', 'in', rec.product_id.route_ids.ids),
                           ('procure_method', '=', 'make_to_order')]
                 rules = rule_model.search(
                     domain, order='route_sequence, sequence', limit=1)
