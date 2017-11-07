@@ -115,11 +115,11 @@ class StockWarehouseOrderpoint(models.Model):
         return True
 
     @api.model
-    def cron_ddmrp(self, automatic=False):
+    def cron_ddmrp_adu(self, automatic=False):
         """Apply extra demand originated by Demand Adjustment Factors to
         components after the cron update of all the buffers."""
         self.env['ddmrp.adjustment.demand'].search([]).unlink()
-        super(StockWarehouseOrderpoint, self).cron_ddmrp(automatic)
+        super(StockWarehouseOrderpoint, self).cron_ddmrp_adu(automatic)
         for op in self.search([]).filtered('extra_demand_ids'):
             op.adu += sum(op.extra_demand_ids.mapped('extra_demand'))
             _logger.info("DAFs-originated demand applied.")
