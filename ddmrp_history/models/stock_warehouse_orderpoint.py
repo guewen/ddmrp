@@ -6,9 +6,9 @@
 import logging
 from math import pi
 
-from openerp import api, fields, models, _
+from odoo import api, fields, models, _
 from datetime import datetime
-from openerp.tools import DEFAULT_SERVER_DATETIME_FORMAT
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 _logger = logging.getLogger(__name__)
 try:
@@ -114,7 +114,6 @@ class StockWarehouseOrderpoint(models.Model):
             script, div = components(p)
             rec.history_chart = '%s%s' % (div, script)
 
-
-    # TODO: store false and computed through a button?
+    # TODO: computed through a button? able to select period.
     history_chart = fields.Text(
         string='Historical Chart', compute='_compute_history_chart')
